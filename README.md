@@ -6,6 +6,15 @@ Even though most of these tools (including sway and wlroots) are now available i
 
 This repository contains a Makefile-based build system for all of these. We are NOT building deb packages (see my [old repository which did](https://github.com/luispabon/sway-ubuntu-deb-build) if you want to do so), but we're directly building from source and installing as root.
 
+## Using Docker
+
+```
+docker build -t sway-dev .
+docker run -ti --rm -v "`pwd`:/workdir" -w /workdir sway-dev 
+make install-dependencies install-repos # or make yolo
+```
+
+
 ## Note: upgrading from Ubuntu 22.10 or earlier
 
 You can safely ignore this note if this is the first time you're installing Sway and all the other apps from this repo.
@@ -43,6 +52,9 @@ A lot of these have actual Ubuntu packages now, however, it is possible to insta
   * wdisplays
   * wf-recorder
   * xdg-desktop-portal-wlr (for screen sharing)
+  * i3status-rust
+  * wayshot
+  * alacritty
 
 **Wayfire apps:**
   * wayfire / wf-config / wcm

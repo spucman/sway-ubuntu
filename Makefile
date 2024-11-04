@@ -31,6 +31,9 @@ WF_CONFIG_VERSION ?= master
 WF_SHELL_VERSION ?= master
 WCM_VERSION ?= master
 ROFI_WAYLAND_VERSION ?= wayland
+ALACRITTY_VERSION ?= v0.14.0
+WAYSHOT_VERSION ?= 1.3.1
+I3STATUS_VERSION ?= v0.33.1
 
 SWAY_CONTRIB_VERSION ?= 2d6e5a9dfba137251547f99befc330ef93d70551
 
@@ -189,6 +192,25 @@ define PIP_PACKAGES
 	meson
 endef
 
+define ALACRITTY_DEPS
+	cmake \
+	g++ \
+	pkg-config \
+	libfreetype6-dev \
+	libfontconfig1-dev \
+	libxcb-xfixes0-dev \
+	libxkbcommon-dev \
+	python3
+endef
+
+define I3STATUS_DEPS
+	libssl-dev \
+	libsensors-dev \
+	libpulse-dev \
+	libnotmuch-dev \
+	libpipewire-0.3-dev 
+endef
+
 NINJA_CLEAN_BUILD_INSTALL=$(UPDATE_STATEMENT) sudo ninja -C build uninstall; sudo rm build -rf && meson build $(ASAN_STATEMENT) && ninja -C build && sudo ninja -C build install
 
 PIPX_ENV=PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin
@@ -201,6 +223,7 @@ yolo: install-dependencies install-repos core apps
 core: seatd-build wlroots-build sway-build
 apps: grimshot-install xdg-desktop-portal-wlr-build kanshi-build waybar-build swaylock-build mako-build rofi-wayland-build wf-recorder-build clipman-build nwg-panel-install swayimg-build wdisplays-build
 wf: wf-config-build wayfire-build wf-shell-build wcm-build
+apps-spuc: xdg-desktop-portal-wlr-build kanshi-build swaylock-build clipman-build swayimg-build wdisplays-build alacritty-build i3status-build wayshot-build
 
 ## Build dependencies
 install-repos:
@@ -226,6 +249,9 @@ install-repos:
 	@git clone https://github.com/artemsen/swayimg.git || echo "Already installed"
 	@git clone https://github.com/sardemff7/libgwater.git || echo "Already installed"
 	@git clone https://github.com/lbonn/rofi.git || echo "Already installed"
+	@git clone https://github.com/alacritty/alacritty.git || echo "Already installed"
+	@git clone https://github.com/waycrate/wayshot || echo "Already installed"
+	@git clone https://github.com/greshake/i3status-rust.git || echo "Already installed"
 
 install-dependencies: install-apt-packages debs-install install-pip-packages
 
@@ -246,7 +272,9 @@ install-apt-packages:
 		$(WAYFIRE_DEPS) \
 		$(NWG_PANEL_DEPS) \
 		$(ROFI_WAYLAND_DEPS) \
-		$(XDG_DESKTOP_PORTAL_DEPS)
+		$(XDG_DESKTOP_PORTAL_DEPS) \
+		$(ALACRITTY_DEPS) \
+		$(I3STATUS_DEPS)
 
 	sudo apt -y install build-essential
 
@@ -259,7 +287,7 @@ debs-install: check-ubuntu-version
 	sudo apt -y install ./debs/*.deb
 
 clean-dependencies:
-	sudo apt autoremove --purge $(WLROOTS_DEPS) $(SWAY_DEPS) $(GTK_LAYER_DEPS) $(WAYBAR_BUILD_DEPS) $(WAYBAR_BUILD_DEPS) $(SWAYLOCK_DEPS) $(WF_RECORDER_DEPS) $(WDISPLAYS_DEPS) $(XDG_DESKTOP_PORTAL_DEPS)
+	sudo apt autoremove --purge $(WLROOTS_DEPS) $(SWAY_DEPS) $(GTK_LAYER_DEPS) $(WAYBAR_BUILD_DEPS) $(WAYBAR_BUILD_DEPS) $(SWAYLOCK_DEPS) $(WF_RECORDER_DEPS) $(WDISPLAYS_DEPS) $(XDG_DESKTOP_PORTAL_DEPS) ${ALACRITTY_DEPS} $(I3STATUS_DEPS)
 
 meson-ninja-build: check-ubuntu-version
 	cd $(APP_FOLDER) && git fetch && git checkout $(APP_VERSION) && $(NINJA_CLEAN_BUILD_INSTALL)
@@ -326,6 +354,15 @@ xdg-desktop-portal-wlr-build:
 	sudo ln -sf /usr/local/libexec/xdg-desktop-portal-wlr /usr/libexec/
 	sudo mkdir -p /usr/share/xdg-desktop-portal/portals/
 	sudo ln -sf /usr/local/share/xdg-desktop-portal/portals/wlr.portal /usr/share/xdg-desktop-portal/portals/
+
+alacritty-build:
+	cd alacritty; git fetch; git checkout $(ALACRITTY_VERSION); cargo build --release;sudo cp target/release/alacritty /usr/local/bin
+
+wayshot-build:
+	cd wayshot; git fetch; git checkout $(WAYSHOT_VERSION);make setup;make;sudo cp target/release/wayshot /usr/local/bin/
+
+i3status-build:
+	cd i3status-rust; git fetch; git checkout $(I3STATUS_VERSION);cargo install --path . --locked;sudo cp target/release/i3status-rs /usr/local/bin
 
 ## Wayfire
 wayfire-all-build: wf-config-build wayfire-build wf-shell-build wcm-build
