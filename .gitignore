@@ -26,3 +26,6 @@ libvarlink
 libscfg
 sway-contrib
 .idea
+alacritty
+i3status-rust
+wayshot
